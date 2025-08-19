@@ -1,4 +1,18 @@
-t_interval_mean <- function(sample, conf_level=0.95){
+t_interval_mean <- function(sample, conf_level=0.95, na.rm=FALSE){
+  
+  # validation
+  if(na.rm){
+    sample <- na.omit(sample)
+  }
+  if (!is.numeric(sample)) {
+    stop("Input samples must be numeric vectors.")
+  }
+  if (conf_level <= 0 || conf_level >= 1) {
+    stop("Confidence level must be between 0 and 1.")
+  }
+  if (length(sample)<2){
+    stop("Sample must have at least two observation")
+  }
   
   sample_mean <- mean(sample)
   s <- sd(sample)
@@ -8,7 +22,9 @@ t_interval_mean <- function(sample, conf_level=0.95){
   t_quantile <- qt(alpha/2, n-1, lower.tail=FALSE)
   margin_error <- t_quantile*s/sqrt(n)
   interval <- c(lower=sample_mean-margin_error, upper=sample_mean+margin_error, margin_error=margin_error)
-  
+  if(!is.na(s) && s==0){
+    warning("Sample variance is equal 0")
+  }
   return(interval)
 }
 
@@ -37,6 +53,9 @@ welchs_t_interval <- function(sample_1, sample_2, conf_level=0.95){
   sample_2_mean <- mean(sample_2)
   s_1 <- sd(sample_1)
   s_2 <- sd(sample_2)
+  if(!is.na(s_1) && !is.na(s_2) && s_1==0 && s_2==0){
+    stop("Variances of both samples are equal 0")
+  }
   n <- length(sample_1)
   m <- length(sample_2)
   alpha <- 1 - conf_level
@@ -55,8 +74,27 @@ welchs_t_interval <- function(sample_1, sample_2, conf_level=0.95){
   return(interval)
 }
 
-two_sample_mean <- function(sample_1, sample_2, conf_level=0.95, same_variance=FALSE, independent=TRUE){
+two_sample_mean <- function(sample_1, sample_2, conf_level=0.95, same_variance=FALSE, independent=TRUE, na.rm=FALSE){
+  
+  # validation
+  if(na.rm){
+    sample_1 <- na.omit(sample_1)
+    sample_2 <- na.omit(sample_2)
+  }
+  if (!is.numeric(sample_1) || !is.numeric(sample_2)) {
+    stop("Input samples must be numeric vectors.")
+  }
+  if (conf_level <= 0 || conf_level >= 1) {
+    stop("Confidence level must be between 0 and 1.")
+  }
+  if (length(sample_1)<2 || length(sample_2)<2){
+    stop("Sample must have at least two observation")
+  }
+                            
   if (!independent){
+    if (length(sample_1)!=length(sample_2)){
+      stop("Samples must have same length")
+    }
     t_interval_mean(sample_1-sample_2, conf_level)
   } else if (!same_variance){
     welchs_t_interval(sample_1, sample_2, conf_level)
