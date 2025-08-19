@@ -30,7 +30,7 @@ two_sample_pooled_t_interval <- function(sample_1, sample_2, conf_level=0.95){
   interval <- c(lower=mean_diff-margin_error, upper=mean_diff+margin_error, margin_error=margin_error)
 }
 
-welchs_t_interval <- function(sample_1, sample_2, conf_interval=0.95){
+welchs_t_interval <- function(sample_1, sample_2, conf_level=0.95){
   sample_1_mean <- mean(sample_1)
   sample_2_mean <- mean(sample_2)
   s_1 <- sd(sample_1)
@@ -49,4 +49,14 @@ welchs_t_interval <- function(sample_1, sample_2, conf_interval=0.95){
   margin_error <- t_quantile*sqrt(waged_sum_of_variances)
   mean_diff <- sample_1_mean - sample_2_mean
   interval <- c(lower=mean_diff-margin_error, upper=mean_diff+margin_error, margin_error=margin_error)
+}
+
+two_sample_mean <- function(sample_1, sample_2, conf_level=0.95, same_variance=FALSE, independent=TRUE){
+  if (!independent){
+    t_interval_mean(sample_1-sample_2, conf_level)
+  } else if (!same_variance){
+    welchs_t_interval(sample_1, sample_2, conf_level)
+  } else{
+    two_sample_pooled_t_interval(sample_1, sample_2, conf_level)
+  }
 }
